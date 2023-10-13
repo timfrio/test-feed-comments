@@ -102,6 +102,7 @@
 <script>
 import api from '../include/api';
 import FormData from 'form-data';
+import isUrlHttp from 'is-url-http';
 
 export default {
     name: 'CommentForm',
@@ -154,7 +155,11 @@ export default {
             data.append('name', this.name);
             data.append('email', this.email);
             if (this.homepage) {
-                data.append('homepage', this.homepage);
+                if (isUrlHttp(this.homepage)) {
+                    data.append('homepage', this.homepage);
+                } else {
+                    return this.errors.homepage = true;
+                }
             }
             data.append('text', this.text);
             data.append('captcha', this.captcha.text);

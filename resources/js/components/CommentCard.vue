@@ -8,6 +8,12 @@
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
 
+                    <a class="btn btn-sm btn-outline-primary"
+                       :href="`mailto:${comment.email}` | lowercase"
+                    >
+                        <font-awesome-icon icon="fa-solid fa-at" class="icon"/>
+                    </a>
+
                     <template v-if="comment.id">
                         <button type="button" class="btn btn-sm btn-outline-primary" @click="onClickButton">
                             <font-awesome-icon icon="fa-solid fa-comments" class="icon"/>
@@ -27,8 +33,6 @@
 </template>
 
 <script>
-import api from "../include/api";
-
 export default {
     name: 'CommentCard',
     data() {
