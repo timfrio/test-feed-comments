@@ -56,7 +56,7 @@
 
         <pagination v-model="page" :records="total" :per-page="25" @paginate="open"/>
 
-        <CommentForm v-model:parent-id="parent.id" />
+        <CommentForm v-model:parent-id="current.id" />
 
     </div>
 
