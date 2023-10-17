@@ -8,6 +8,24 @@
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
 
+                    <template v-if="attachmentIs()">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary"
+                                v-on:click="showImage()"
+                        >
+                            <font-awesome-icon icon="fa-solid fa-file-image" class="icon"/>
+                        </button>
+                    </template>
+
+                    <template v-if="attachmentIs('lines')">
+                        <a :href="`/storage/${comment.attachment_storage_url}`"
+                           target="_blank"
+                           class="btn btn-sm btn-outline-primary"
+                        >
+                            <font-awesome-icon icon="fa-solid fa-file-lines" class="icon"/>
+                        </a>
+                    </template>
+
                     <a class="btn btn-sm btn-outline-primary"
                        :href="`mailto:${comment.email}` | lowercase"
                     >
@@ -33,6 +51,9 @@
 </template>
 
 <script>
+import PhotoSwipe from 'photoswipe';
+import 'photoswipe/style.css';
+
 export default {
     name: 'CommentCard',
     data() {
@@ -40,7 +61,11 @@ export default {
             page: 1,
             total: 0,
             last: 0,
-            comments: []
+            comments: [],
+            attachmentAllowExtension: {
+                image: ['.png', '.gif', '.jpg'],
+                lines: ['.txt'],
+            }
         }
     },
     props: {
@@ -49,6 +74,24 @@ export default {
     methods: {
         onClickButton(event) {
             this.$emit('clicked', this.comment.id)
+        },
+        attachmentIs(type = 'image') {
+            return this.comment.attachment_storage_url ?
+                this.attachmentAllowExtension[type]
+                    .map(ex => this.comment.attachment_storage_url.includes(ex))
+                    .includes(true) : false;
+        },
+        showImage() {
+            const ps = new PhotoSwipe({
+                dataSource: [
+                    {
+                        src: `/storage/${this.comment.attachment_storage_url}`,
+                        width: 320,
+                        height: 240
+                    },
+                ],
+            });
+            ps.init();
         }
     }
 }

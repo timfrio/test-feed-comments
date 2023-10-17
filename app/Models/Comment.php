@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Attachment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Class Comment
@@ -35,8 +37,18 @@ class Comment extends Model
         return $this->hasMany(Comment::class, 'parent');
     }
 
+    public function attachment(): HasOne
+    {
+        return $this->hasOne(Attachment::class, 'comment_id');
+    }
+
     public function scopeChild(Builder $query) : void
     {
         $query->withCount('children');
+    }
+
+    public function scopeAttachment(Builder $query): void
+    {
+        $query->withAggregate('attachment', 'storage_url');
     }
 }

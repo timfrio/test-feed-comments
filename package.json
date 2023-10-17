@@ -23,6 +23,7 @@
         "bootstrap": "^5.3.2",
         "bootstrap-vue": "^2.23.1",
         "is-url-http": "^2.3.6",
+        "photoswipe": "^5.4.2",
         "v-pagination-3": "^0.1.7",
         "vue": "^3.2.36"
     }

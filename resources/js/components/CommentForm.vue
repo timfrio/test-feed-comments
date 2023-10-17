@@ -67,7 +67,7 @@
 
                         <div class="mb-3">
                             <label for="file" class="form-label">File</label>
-                            <input class="form-control" type="file" id="file" accept="image/png, image/gif, image/jpeg, .txt">
+                            <input class="form-control" type="file" id="file" ref="file" accept="image/png, image/gif, image/jpeg, .txt" v-on:change="handleFileUpload()">
                         </div>
 
                         <hr class="my-4">
@@ -162,10 +162,17 @@ export default {
                 }
             }
             data.append('text', this.text);
+            if (this.file) {
+                data.append('file', this.file);
+            }
             data.append('captcha', this.captcha.text);
             data.append('key', this.captcha.key);
 
-            api.post('/api/comment/send-comment', data).then(response => {
+            api.post('/api/comment/send-comment', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then(response => {
                 if (response.status === 'ok') {
                     document.querySelector('#myModal').style.display = "none";
                     document.querySelector('.modal-backdrop').remove();
@@ -187,6 +194,9 @@ export default {
         clearErrors() {
             this.errors.homepage = false;
             this.errors.text = false;
+        },
+        handleFileUpload() {
+            this.file = this.$refs.file.files[0];
         }
     }
 }

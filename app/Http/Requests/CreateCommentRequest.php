@@ -18,7 +18,9 @@ class CreateCommentRequest extends FormRequest
             'email'     => 'required|email|max:255',
 //            'text'      => ['required', 'regex:/<(\/)?(a|code|i|strong)*>/'],
             'text'      => 'required',
-            'homepage'  => 'url:http,https|max:255'
+            'homepage'  => 'url:http,https|max:255',
+            'file'      => 'file|mimes:jpg,gif,png,txt',
+            'captcha'   => 'required|captcha_api:'. request('key') . ',math'
         ];
     }
 }
