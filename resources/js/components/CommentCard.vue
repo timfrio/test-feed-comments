@@ -27,7 +27,7 @@
                     </template>
 
                     <a class="btn btn-sm btn-outline-primary"
-                       :href="`mailto:${comment.email}` | lowercase"
+                       :href="`mailto:${comment.email}`"
                     >
                         <font-awesome-icon icon="fa-solid fa-at" class="icon"/>
                     </a>
@@ -70,6 +70,9 @@ export default {
     },
     props: {
         comment: Array
+    },
+    mounted() {
+        console.debug(this.comment.email)
     },
     methods: {
         onClickButton(event) {

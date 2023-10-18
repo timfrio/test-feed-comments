@@ -83,11 +83,13 @@ export default {
                 id: 0,
                 name: '',
                 text: '',
+                email: ''
             },
             current: {
                 id: 0,
                 name: '',
-                text: ''
+                text: '',
+                email: '',
             }
         }
     },
@@ -131,22 +133,17 @@ export default {
          */
         setParentData(parent) {
             if (parent) {
-                let {id, name, text} = parent;
-                this.parent.id = id;
-                this.parent.name = name;
-                this.parent.text = text;
+                this.parent = parent
             } else {
                 this.parent.id = 0;
             }
         },
         /**
          *
-         * @param current
+         * @param current {object}
          */
         setCurrentData(current) {
-            let {name, text} = current;
-            this.current.name = name;
-            this.current.text = text;
+            this.current = current
         },
         /**
          *
