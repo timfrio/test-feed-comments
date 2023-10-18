@@ -22,20 +22,16 @@
                                     :class="{'is-invalid': errors.name}"
                                     id="name"
                                     required
-                                    v-model="name"
+                                    v-bind="name"
                                 />
-                                <div class="invalid-feedback">
-                                    Valid first name is required.
-                                </div>
+                                <div class="invalid-feedback" v-text="errors.name"/>
 
                             </div>
 
                             <div class="col-6">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" :class="{'is-invalid': errors.email}" id="email" placeholder="you@example.com" v-model="email">
-                                <div class="invalid-feedback">
-                                    Please enter a valid email address for shipping updates.
-                                </div>
+                                <input type="email" class="form-control" :class="{'is-invalid': errors.email}" id="email" placeholder="you@example.com" v-bind="email">
+                                <div class="invalid-feedback" v-text="errors.email"/>
                             </div>
 
                             <div class="col-12">
@@ -60,7 +56,8 @@
 
                         <div class="mb-3">
                             <label for="text" class="form-label">Text</label>
-                            <textarea class="form-control" :class="{'is-invalid': errors.text}" id="text" rows="3" v-model="text"></textarea>
+                            <textarea class="form-control" :class="{'is-invalid': errors.text}" id="text" rows="3" v-bind="text"/>
+                            <div class="invalid-feedback" v-text="errors.text"/>
                         </div>
 
                         <hr class="my-4">
@@ -82,7 +79,7 @@
                         </div>
 
                         <div class="form-group mb-4">
-                            <input id="captcha" type="text" class="form-control" :class="{'is-invalid': errors.captcha}" placeholder="Enter Captcha" name="captcha" v-model="captcha.text">
+                            <input id="captcha" type="text" class="form-control" :class="{'is-invalid': errors.captcha}" placeholder="Enter Captcha" name="captcha" v-bind="captcha.text">
                             <div class="invalid-feedback">
                                 Not valid.
                             </div>
@@ -92,7 +89,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" v-on:click="sendComment">Save changes</button>
+                    <button type="button" class="btn btn-primary" v-on:click="sendComment" :disabled="!isDisabled">Save changes</button>
                 </div>
             </div>
         </div>
@@ -103,6 +100,8 @@
 import api from '../include/api';
 import FormData from 'form-data';
 import isUrlHttp from 'is-url-http';
+import { useForm } from 'vee-validate';
+import * as yup from 'yup';
 
 export default {
     name: 'CommentForm',
@@ -121,19 +120,34 @@ export default {
             file: null,
             captcha: {
                 img: null,
-                text: '',
+                text: null,
                 key: null
             },
-            errors: {
-                name: false,
-                email: false,
-                homepage: false,
-                text: false,
-                captcha: false
-            }
+            values: {},
+            errors: {}
+        }
+    },
+    computed: {
+        isDisabled() {
+            let {name, email, text, captcha} = this.values;
+            return !!name && !!email && !!text && !!captcha;
         }
     },
     mounted() {
+        const { values, errors, defineInputBinds } = useForm({
+            validationSchema: yup.object({
+                name: yup.string().required(),
+                email: yup.string().email().required(),
+                text: yup.string().required(),
+                captcha: yup.string().required()
+            }),
+        });
+        this.name = defineInputBinds('name');
+        this.email = defineInputBinds('email');
+        this.text = defineInputBinds('text');
+        this.captcha.text = defineInputBinds('captcha');
+        this.values = values;
+        this.errors = errors;
         this.reload_captcha();
     },
     methods: {
@@ -141,19 +155,17 @@ export default {
             api.get('/captcha/api').then(({data}) => {
                 this.captcha.image = data.img;
                 this.captcha.key = data.key;
-                this.captcha.text = '';
+                this.captcha.text.value = null;
             })
         },
         sendComment: function () {
-            this.clearErrors();
-
             let data = new FormData();
 
             if (this.parentId) {
                 data.append('parent', this.parentId);
             }
-            data.append('name', this.name);
-            data.append('email', this.email);
+            data.append('name', this.values.name);
+            data.append('email', this.values.email);
             if (this.homepage) {
                 if (isUrlHttp(this.homepage)) {
                     data.append('homepage', this.homepage);
@@ -161,11 +173,11 @@ export default {
                     return this.errors.homepage = true;
                 }
             }
-            data.append('text', this.text);
+            data.append('text', this.values.text);
             if (this.file) {
                 data.append('file', this.file);
             }
-            data.append('captcha', this.captcha.text);
+            data.append('captcha', this.values.captcha);
             data.append('key', this.captcha.key);
 
             api.post('/api/comment/send-comment', data, {
@@ -173,27 +185,24 @@ export default {
                     'Content-Type': 'multipart/form-data'
                 }
             }).then(response => {
-                if (response.status === 'ok') {
+                if (response.status === 200) {
                     document.querySelector('#myModal').style.display = "none";
                     document.querySelector('.modal-backdrop').remove();
                     this.clearData();
                 }
-            }).catch(response => {
-                response.errors.forEach(errorSection => {
-                    this.errors[errorSection] = true;
-                });
+            }).catch(({response}) => {
+                for (const [errorSection, errorData] of Object.entries(response.data.errors)) {
+                    this.errors[errorSection] = errorData[0];
+                }
             });
+            this.reload_captcha();
         },
         clearData() {
-            this.name = null;
-            this.email = null;
+            this.values.name = null;
+            this.values.email = null;
             this.homepage = null
-            this.text = null
+            this.values.text = null
             this.file = null
-        },
-        clearErrors() {
-            this.errors.homepage = false;
-            this.errors.text = false;
         },
         handleFileUpload() {
             this.file = this.$refs.file.files[0];
